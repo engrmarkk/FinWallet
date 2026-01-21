@@ -4,7 +4,7 @@ const StatusResponse = require('../utils/statusResponse');
 
 // middleware/errorHandler.js
 function errorHandler(err, req, res, next) {
-  console.error(err); // optional: log for debugging
+  console.error(err);
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
