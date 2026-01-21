@@ -39,6 +39,15 @@ const authenticate = async (req, res, next) => {
       );
     }
 
+    if (!user.emailVerified) {
+      return apiResponse(
+        res,
+        'Your account is not verified.',
+        HttpStatusCodes.UNAUTHORIZED,
+        StatusResponse.FAILED
+      );
+    }
+
     req.user = user;
     req.token = token;
     next();
