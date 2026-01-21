@@ -4,6 +4,8 @@ const errorHandler = require('./src/middlewares/errorHandler');
 const pingRoute = require('./src/routes/pingRoute');
 const authRoute = require('./src/routes/authRoute');
 const userRoute = require('./src/routes/userRoute');
+const transactionRoute = require('./src/routes/transactionRoute');
+const miscRoute = require('./src/routes/miscRoute');
 
 const express = require('express');
 const app = express();
@@ -27,6 +29,8 @@ app.use(express.json());
 app.use(`${apiVersion}/ping`, pingRoute);
 app.use(`${apiVersion}/auth`, authRoute);
 app.use(`${apiVersion}/user`, userRoute);
+app.use(`${apiVersion}/transactions`, transactionRoute);
+app.use(`${apiVersion}/misc`, miscRoute);
 
 app.use(errorHandler);
 // listien to connection 'open' event, if its connected, run the server
