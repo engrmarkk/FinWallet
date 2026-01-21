@@ -1,14 +1,31 @@
 const mongoose = require('mongoose');
+const { formatDate } = require('../utils/appUtil');
+const { toTitleCase } = require('../utils/appUtil');
 
 const { Schema } = mongoose;
 
 const transactionCategories = new Schema(
   {
     name: { type: String, required: true, unique: true, index: true },
-    date: { type: Date, default: Date.now, index: true },
   },
   { timestamps: true }
 );
+
+transactionCategories.set('toJSON', {
+  transform: (doc, ret) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+
+    ret.name = toTitleCase(ret.name);
+
+    ret.createdAt = formatDate(ret.createdAt);
+    ret.updatedAt = formatDate(ret.updatedAt);
+    // remove version key
+    delete ret.__v;
+
+    return ret;
+  },
+});
 
 // user account schema
 const transactionSchema = new Schema(
@@ -28,7 +45,7 @@ const transactionSchema = new Schema(
       enum: ['credit', 'debit'],
       required: true,
     },
-    category: {
+    categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'TransactionCategory',
       required: true,
@@ -61,10 +78,28 @@ const transactionSchema = new Schema(
       type: String,
       required: false,
     },
-    date: { type: Date, default: Date.now, index: true },
+    bankCode: {
+      type: String,
+      required: false,
+    },
   },
   { timestamps: true }
 );
+
+transactionSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+
+    ret.createdAt = formatDate(ret.createdAt);
+    ret.updatedAt = formatDate(ret.updatedAt);
+    ret.categoryId = ret.categoryId.toString();
+    // remove version key
+    delete ret.__v;
+
+    return ret;
+  },
+});
 
 // bill payment model
 const billTransactionSchema = new Schema(
@@ -99,10 +134,9 @@ const billTransactionSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'paid', 'failed'],
+      enum: ['pending', 'completed', 'failed'],
       default: 'pending',
     },
-    date: { type: Date, default: Date.now, index: true },
   },
   { timestamps: true }
 );
