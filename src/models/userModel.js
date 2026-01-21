@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { formatDate } = require('../utils/appUtil');
+const { generateAccountNumber } = require('../utils/appUtil');
 
 const { Schema } = mongoose;
 
@@ -60,10 +62,25 @@ const userSchema = new Schema(
       unique: true,
       index: true,
     },
-    date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
+
+userSchema.set('toJSON', {
+  transform: function (doc, ret) {
+    // convert _id to id
+    ret.id = ret._id.toString();
+    delete ret._id;
+
+    ret.createdAt = formatDate(ret.createdAt);
+    ret.updatedAt = formatDate(ret.updatedAt);
+
+    // remove version key
+    delete ret.__v;
+
+    return ret;
+  },
+});
 
 // user session
 const userSessionSchema = new Schema(
@@ -98,7 +115,6 @@ const userSessionSchema = new Schema(
       type: Boolean,
       default: true,
     },
-    date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
@@ -116,13 +132,73 @@ const walletSchema = new Schema(
       type: Number,
       required: true,
     },
-    date: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
+
+walletSchema.set('toJSON', {
+  transform: function (doc, ret) {
+    // convert _id to id
+    ret.id = ret._id.toString();
+    delete ret._id;
+
+    ret.createdAt = formatDate(ret.createdAt);
+    ret.updatedAt = formatDate(ret.updatedAt);
+
+    // remove version key
+    delete ret.__v;
+
+    return ret;
+  },
+});
+
+const bankAccountSchema = new Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
+    bankName: {
+      type: String,
+      required: true,
+      default: process.env.BANK_NAME || 'FinWallet Bank',
+    },
+    accountNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      default: () => generateAccountNumber(),
+    },
+    accountName: {
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
+bankAccountSchema.set('toJSON', {
+  transform: function (doc, ret) {
+    // convert _id to id
+    ret.id = ret._id.toString();
+    delete ret._id;
+
+    ret.createdAt = formatDate(ret.createdAt);
+    ret.updatedAt = formatDate(ret.updatedAt);
+
+    // remove version key
+    delete ret.__v;
+
+    return ret;
+  },
+});
 
 module.exports = {
   User: mongoose.model('User', userSchema),
   UserSession: mongoose.model('UserSession', userSessionSchema),
   Wallet: mongoose.model('Wallet', walletSchema),
+  BankAccount: mongoose.model('BankAccount', bankAccountSchema),
 };
