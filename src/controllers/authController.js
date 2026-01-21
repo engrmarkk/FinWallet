@@ -8,6 +8,7 @@ const {
   createUser,
   createUserSession,
   createUserWalletIfNotExists,
+  createBankAccountIfNotExists,
   getUserSessionByUserId,
 } = require('../dbCruds/authCrud');
 const { generateSecureOTP, validateEmail, comparePassword } = require('../utils/appUtil');
@@ -137,7 +138,6 @@ exports.registerController = async (req, res) => {
   console.log(`Generated OTP: ${otp} for user: ${user._id}`);
 
   await createUserSession(otp, user._id);
-  await createUserWalletIfNotExists(user._id);
 
   return apiResponse(
     res,
@@ -206,6 +206,9 @@ exports.verifyAccountController = async (req, res) => {
   if (userSess.otp_expires < Date.now()) {
     return apiResponse(res, 'OTP has expired', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
   }
+
+  await createUserWalletIfNotExists(user._id);
+  await createBankAccountIfNotExists(`${user.lastName} ${user.firstName}`, user._id);
 
   user.emailVerified = true;
   userSess.otp_valid = false;
