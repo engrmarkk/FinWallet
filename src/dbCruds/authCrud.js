@@ -1,4 +1,4 @@
-const { User, UserSession, Wallet } = require('../models/userModel');
+const { User, UserSession, Wallet, BankAccount } = require('../models/userModel');
 const { hashPassword } = require('../utils/appUtil');
 
 // Email exists
@@ -60,6 +60,19 @@ const createUserWalletIfNotExists = async (userId) => {
   return existingWallet;
 };
 
+// create bank account for user if not exist
+const createBankAccountIfNotExists = async (fullName, userId) => {
+  const existingBankAccount = await BankAccount.findOne({ userId });
+  if (!existingBankAccount) {
+    const newBankAccount = new BankAccount({
+      userId,
+      accountName: fullName,
+    });
+    return await newBankAccount.save();
+  }
+  return existingBankAccount;
+};
+
 module.exports = {
   getUserByEmail,
   getUserByPhoneNumber,
@@ -67,4 +80,5 @@ module.exports = {
   getUserSessionByUserId,
   createUserSession,
   createUserWalletIfNotExists,
+  createBankAccountIfNotExists,
 };
