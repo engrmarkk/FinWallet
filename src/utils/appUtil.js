@@ -49,6 +49,28 @@ function toTitleCase(str) {
     .join(' ');
 }
 
+function generateReferences(randomLength = 6) {
+  const now = new Date();
+
+  // Format datetime → yyyymmddhhmmss
+  const timestamp =
+    now.getFullYear().toString() +
+    String(now.getMonth() + 1).padStart(2, '0') +
+    String(now.getDate()).padStart(2, '0') +
+    String(now.getHours()).padStart(2, '0') +
+    String(now.getMinutes()).padStart(2, '0') +
+    String(now.getSeconds()).padStart(2, '0');
+
+  // Generate random digits
+  const randomPart = Math.floor(Math.random() * Math.pow(10, randomLength))
+    .toString()
+    .padStart(randomLength, '0');
+
+  const ref = timestamp + randomPart;
+
+  return ref;
+}
+
 module.exports = {
   generateSecureOTP,
   hashPassword,
@@ -57,4 +79,5 @@ module.exports = {
   formatDate,
   generateAccountNumber,
   toTitleCase,
+  generateReferences,
 };
