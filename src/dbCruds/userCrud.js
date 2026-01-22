@@ -31,8 +31,15 @@ const getUserWalletByUser = async (user) => {
   return wallet.toJSON();
 };
 
+// get user balance
+const getUserBalance = async (userId) => {
+  const wallet = await Wallet.findOne({ userId });
+  return wallet.balance;
+};
+
 module.exports = {
   getBankAccountByUser,
   getUserWalletByUser,
   getBankAccountByAccountNumber,
+  getUserBalance,
 };
