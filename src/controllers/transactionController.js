@@ -9,8 +9,9 @@ const {
   creditOrDebitUserWallet,
   getTransactionByReference,
 } = require('../dbCruds/transactionCrud');
-const { getBankAccountByAccountNumber } = require('../dbCruds/userCrud');
-const { buildTransactionResponse } = require('../helpers/transHelper');
+const { getBankAccountByAccountNumber, getUserBalance } = require('../dbCruds/userCrud');
+const { generateReferences } = require('../utils/appUtil');
+// const { buildTransactionResponse } = require('../helpers/transHelper');
 
 // create transaction category controller
 const createTransactionCategoryController = async (req, res) => {
@@ -57,17 +58,6 @@ const getTransactionCategoriesController = async (req, res) => {
 };
 
 // top up controller
-//   userId,
-//   amount,
-//   type,
-//   categoryId,
-//   status,
-//   narration,
-//   reference,
-//   bankName = '',
-//   accountNumber = '',
-//   accountName = '',
-//   bankCode = ''
 const topUpController = async (req, res) => {
   try {
     if (!req.body) {
@@ -174,8 +164,82 @@ const topUpController = async (req, res) => {
   }
 };
 
+// transfer controller
+const transferController = async (req, res) => {
+  try {
+    if (!req.body) {
+      return apiResponse(
+        res,
+        'Request body is required',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+    const { amount, narration, bankName, accountNumber, accountName, bankCode } = req.body;
+    if (!amount || amount <= 0) {
+      return apiResponse(
+        res,
+        'Amount is required and must be greater than 0',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    if (!bankName || !accountNumber || !accountName || !bankCode) {
+      return apiResponse(
+        res,
+        'Bank details (bankName, accountNumber, accountName, bankCode) are required',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    user = req.user;
+    const userBalance = await getUserBalance(user._id);
+    if (amount > userBalance) {
+      return apiResponse(
+        res,
+        'Insufficient funds',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+    categoryId = await getTransactionCategoryByName('transfer').then((cat) => cat._id);
+    const reference = await generateReferences();
+    console.log(`Reference for transfer: ${reference}`);
+
+    const newTransaction = await createTransaction(
+      user._id,
+      amount,
+      'debit',
+      categoryId,
+      'completed',
+      narration,
+      reference,
+      bankName,
+      accountNumber,
+      accountName,
+      bankCode
+    );
+
+    await creditOrDebitUserWallet(user._id, amount, 'debit');
+
+    return apiResponse(
+      res,
+      'Transfer successful',
+      HttpStatusCodes.CREATED,
+      StatusResponse.SUCCESS,
+      newTransaction
+    );
+  } catch (error) {
+    console.error('Error in transferController:', error);
+    return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
+  }
+};
+
 module.exports = {
   createTransactionCategoryController,
   getTransactionCategoriesController,
   topUpController,
+  transferController,
 };
