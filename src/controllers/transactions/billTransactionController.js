@@ -3,7 +3,13 @@ const HttpStatusCodes = require('../../utils/statusCodes');
 const StatusResponse = require('../../utils/statusResponse');
 const Logger = require('../../utils/logger');
 const { VtpassService } = require('../../integrations/vtpass/services');
-const { determinePurchaseType } = require('../../utils/appUtil');
+const { determinePurchaseType, generateRequestId } = require('../../utils/appUtil');
+const {
+  createTransactionCategory,
+  createBillTransaction,
+  creditOrDebitUserWallet,
+} = require('../../dbCruds/transactionCrud');
+const { getUserBalance } = require('../../dbCruds/userCrud');
 
 const vtpass = new VtpassService();
 
@@ -161,8 +167,173 @@ const verifyMeterAndSmartcardNumberController = async (req, res) => {
   }
 };
 
+// purchase bill controller
+const purchaseBillController = async (req, res) => {
+  try {
+    if (!req.body?.serviceID) {
+      return apiResponse(
+        res,
+        'serviceID is required',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    user = req.user;
+
+    const serviceID = req.body.serviceID;
+    const billersCode = req.body.billersCode;
+    const variation_code = req.body.variation_code;
+    const subscription_type = req.body.subscription_type;
+    const phone = req.body.phone;
+    const amount = req.body.amount;
+    const quantity = req.body.quantity || 1;
+    if (!serviceID) {
+      return apiResponse(
+        res,
+        'serviceID is required',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    const request_id = generateRequestId();
+
+    // initiate object for payload with serviceID, request_id, phone, amount
+    let payload = {
+      serviceID,
+      request_id,
+      phone,
+      amount,
+    };
+
+    const purchaseType = determinePurchaseType(req.body.serviceID);
+    if (purchaseType === 'airtime') {
+      if (!phone || !amount) {
+        return apiResponse(
+          res,
+          'phone and amount are required for airtime purchase',
+          HttpStatusCodes.BAD_REQUEST,
+          StatusResponse.FAILED
+        );
+      }
+      if (amount < 50) {
+        return apiResponse(
+          res,
+          'Amount must be at least 50 for airtime purchase',
+          HttpStatusCodes.BAD_REQUEST,
+          StatusResponse.FAILED
+        );
+      }
+    } else if (purchaseType === 'data') {
+      if (!billersCode || !variation_code || !phone || !amount) {
+        return apiResponse(
+          res,
+          'billersCode, variation_code, phone and amount are required for data purchase',
+          HttpStatusCodes.BAD_REQUEST,
+          StatusResponse.FAILED
+        );
+      }
+
+      payload.billersCode = billersCode;
+      payload.variation_code = variation_code;
+    } else if (purchaseType === 'cable') {
+      if (!billersCode || !variation_code || !phone || !amount || !subscription_type) {
+        return apiResponse(
+          res,
+          'billersCode, variation_code, phone, amount and subscription_type are required for cable tv purchase',
+          HttpStatusCodes.BAD_REQUEST,
+          StatusResponse.FAILED
+        );
+      }
+      payload.billersCode = billersCode;
+      payload.variation_code = variation_code;
+      payload.subscription_type = subscription_type;
+      payload.quantity = quantity;
+    } else if (purchaseType === 'electricity') {
+      if (!billersCode || !variation_code || !phone || !amount) {
+        return apiResponse(
+          res,
+          'billersCode, variation_code, phone and amount are required for electricity bill purchase',
+          HttpStatusCodes.BAD_REQUEST,
+          StatusResponse.FAILED
+        );
+      }
+      payload.billersCode = billersCode;
+      payload.variation_code = variation_code;
+    } else {
+      return apiResponse(
+        res,
+        'Invalid serviceID',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    const userBalance = await getUserBalance(user._id);
+    
+    if (amount > userBalance) {
+      return apiResponse(
+        res,
+        'Insufficient funds',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    categoryId = await createTransactionCategory(purchaseType).then((cat) => cat._id);
+    logger.info(`${purchaseType} category ID: ${categoryId}`);
+
+    const trans = await createBillTransaction(
+      user._id,
+      amount,
+      'debit',
+      categoryId,
+      'pending',
+      'Purchase of bill',
+      request_id,
+      '', // billerName
+      purchaseType,
+      variation_code,
+      serviceID
+    );
+
+    await creditOrDebitUserWallet(user._id, amount, 'debit');
+
+    const vtpassResponse = await vtpass.purchaseProduct(payload);
+
+    // if the code is "000", update the transaction status to completed
+    if (vtpassResponse.code === '000') {
+      // update the bill transaction status to completed
+      // update the main transaction status to completed
+      return apiResponse(
+        res,
+        'Bill purchase successful',
+        HttpStatusCodes.OK,
+        StatusResponse.SUCCESS
+      );
+    } else {
+      // update the bill transaction status to failed
+      // update the main transaction status to failed
+      // there should be a refund logic here
+
+      return apiResponse(
+        res,
+        vtpassResponse.response_description || 'Bill purchase failed',
+        HttpStatusCodes.UNPROCESSABLE_ENTITY,
+        StatusResponse.FAILED,
+        vtpassResponse
+      );
+    }
+  } catch (error) {
+    logger.error(`Error in purchaseBillController: ${error}`);
+    return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
+  }
+};
+
 module.exports = {
   getServicesController,
   getVariationsController,
   verifyMeterAndSmartcardNumberController,
+  purchaseBillController,
 };
