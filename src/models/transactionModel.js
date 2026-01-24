@@ -132,6 +132,16 @@ const billTransactionSchema = new Schema(
       type: Number,
       required: true,
     },
+    reference: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    serviceID: {
+      type: String,
+      required: false,
+    },
     status: {
       type: String,
       enum: ['pending', 'completed', 'failed'],
