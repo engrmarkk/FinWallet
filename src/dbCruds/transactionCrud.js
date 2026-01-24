@@ -1,5 +1,8 @@
 const { Transaction, BillTransaction, TransactionCategory } = require('../models/transactionModel');
 const { Wallet } = require('../models/userModel');
+const Logger = require('../utils/logger');
+
+const logger = new Logger();
 
 // credit or debit user wallet
 const creditOrDebitUserWallet = async (userId, amount, type) => {
@@ -17,7 +20,12 @@ const creditOrDebitUserWallet = async (userId, amount, type) => {
 
 // category exists
 const getTransactionCategoryByName = async (name) => {
-  return await TransactionCategory.findOne({ name });
+  const category = await TransactionCategory.findOne({ name });
+  // if category does not exist create it
+  if (!category) {
+    category = await createTransactionCategory(name);
+  }
+  return category;
 };
 
 // get transaction category by id
@@ -27,7 +35,7 @@ const getTransactionCategoryById = async (id) => {
 
 // create transaction category
 const createTransactionCategory = async (name) => {
-  console.log('Creating transaction category with name:', name);
+  logger.info(`Creating transaction category with name: ${name}`);
   const lowerName = name.toLowerCase();
   const existingCategory = await getTransactionCategoryByName(lowerName);
   if (existingCategory) {
