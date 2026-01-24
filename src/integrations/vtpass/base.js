@@ -24,4 +24,4 @@ class VtpassBase {
   }
 }
 
-export default VtpassBase;
+module.exports = { VtpassBase };
