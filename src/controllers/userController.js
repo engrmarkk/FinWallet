@@ -3,6 +3,9 @@ const HttpStatusCodes = require('../utils/statusCodes');
 const StatusResponse = require('../utils/statusResponse');
 const { PaystackService } = require('../integrations/paystack/services');
 const { getBankAccountByUser, getUserWalletByUser } = require('../dbCruds/userCrud');
+const Logger = require('../utils/logger');
+
+const logger = new Logger();
 
 const ps = new PaystackService();
 
@@ -44,7 +47,7 @@ const getBanksController = async (req, res) => {
       );
     }
   } catch (error) {
-    console.error('Error in getBanksController:', error);
+    logger.error(`Error in getBanksController: ${error}`);
     return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
   }
 };
@@ -64,7 +67,7 @@ const resolveAccountNumberController = async (req, res) => {
 
   try {
     const resolutionData = await ps.resolveAccountNumber(accountNumber, bankCode);
-    console.log('Account resolution data from Paystack:', resolutionData);
+    logger.info(`Account resolution data from Paystack: ${resolutionData}`);
     if (resolutionData.status) {
       return apiResponse(
         res,
@@ -82,7 +85,7 @@ const resolveAccountNumberController = async (req, res) => {
       );
     }
   } catch (error) {
-    console.error('Error in resolveAccountNumberController:', error);
+    logger.error(`Error in resolveAccountNumberController: ${error}`);
     return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
   }
 };
@@ -100,7 +103,7 @@ const getMyBankDetailsController = async (req, res) => {
       bankAccount
     );
   } catch (error) {
-    console.error('Error fetching bank account details:', error);
+    logger.error(`Error in getMyBankDetailsController: ${error}`);
     return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
   }
 };
@@ -118,7 +121,7 @@ const getMyWalletDetailsController = async (req, res) => {
       wallet
     );
   } catch (error) {
-    console.error('Error fetching wallet details:', error);
+    logger.error(`Error in getMyWalletDetailsController: ${error}`);
     return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
   }
 };
