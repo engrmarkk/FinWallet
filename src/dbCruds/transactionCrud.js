@@ -92,7 +92,8 @@ const createBillTransaction = async (
   reference,
   billerName,
   billerType,
-  billerCode
+  billerCode,
+  serviceID
 ) => {
   const transaction = await createTransaction(
     userId,
@@ -111,6 +112,8 @@ const createBillTransaction = async (
     billerCode,
     amount,
     status,
+    reference,
+    serviceID,
   });
   await newBillTransaction.save();
   return transaction;
