@@ -38,7 +38,7 @@ const validateEmail = async (email) => {
 };
 
 const formatDate = (date) => {
-  return format(new Date(date), 'dd-MM-yy HH:mm:ss');
+  return format(new Date(date), 'dd-MM-yyyy HH:mm:ss');
 };
 
 function toTitleCase(str) {
@@ -71,6 +71,40 @@ function generateReferences(randomLength = 6) {
   return ref;
 }
 
+function determinePurchaseType(serviceId) {
+  const service = serviceId.toLowerCase();
+  if (['mtn', 'glo', 'etisalat', 'airtel'].includes(service)) {
+    return 'airtime';
+  } else if (
+    ['mtn-data', 'glo-data', 'etisalat-data', 'airtel-data', 'smiles', 'spectranet'].includes(
+      service
+    )
+  ) {
+    return 'data';
+  } else if (
+    [
+      'ikeja-electric',
+      'eko-electric',
+      'abuja-electric',
+      'kano-electric',
+      'portharcourt-electric',
+      'jos-electric',
+      'kaduna-electric',
+      'enugu-electric',
+      'ibadan-electric',
+      'benin-electric',
+      'aba-electric',
+      'yola-electric',
+    ].includes(service)
+  ) {
+    return 'electricity';
+  } else if (['dstv', 'gotv', 'startimes', 'showmax'].includes(service)) {
+    return 'cable';
+  } else {
+    return null;
+  }
+}
+
 module.exports = {
   generateSecureOTP,
   hashPassword,
@@ -80,4 +114,5 @@ module.exports = {
   generateAccountNumber,
   toTitleCase,
   generateReferences,
+  determinePurchaseType,
 };
