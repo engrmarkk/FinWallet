@@ -12,6 +12,9 @@ const {
   getUserSessionByUserId,
 } = require('../dbCruds/authCrud');
 const { generateSecureOTP, validateEmail, comparePassword } = require('../utils/appUtil');
+const Logger = require('../utils/logger');
+
+const logger = new Logger();
 
 exports.loginController = async (req, res) => {
   if (!req.body?.email || !req.body?.password) {
@@ -24,7 +27,7 @@ exports.loginController = async (req, res) => {
   }
   const { email, password } = req.body;
 
-  console.log(`Email: ${email}, Password: ${password}`);
+  logger.info(`Login attempt for email: ${email}`);
   const user = await getUserByEmail(email);
   if (!user || !(await comparePassword(password, user.password))) {
     return apiResponse(
@@ -83,7 +86,7 @@ exports.registerController = async (req, res) => {
   }
 
   const emailVal = await validateEmail(email);
-  console.log(`Email validation for ${email}: ${emailVal}`);
+  logger.info(`Email validation for ${email}: ${emailVal}`);
   if (!emailVal) {
     return apiResponse(
       res,
@@ -135,7 +138,7 @@ exports.registerController = async (req, res) => {
 
   const otp = await generateSecureOTP();
 
-  console.log(`Generated OTP: ${otp} for user: ${user._id}`);
+  logger.info(`Generated OTP : ${otp} for user ID ${user._id}`);
 
   await createUserSession(otp, user._id);
 
@@ -158,7 +161,7 @@ exports.verifyAccountController = async (req, res) => {
     );
   }
   const { email, otp } = req.body;
-  console.log(`Email: ${email}, OTP: ${otp}`);
+  logger.info(`Verifying account for email: ${email} with OTP: ${otp}`);
 
   if (!otp) {
     return apiResponse(res, 'OTP is required', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
@@ -258,9 +261,9 @@ exports.resendOTPController = async (req, res) => {
     );
   }
 
-  otp = await generateSecureOTP();
+  const otp = await generateSecureOTP();
 
-  console.log(`Generated OTP: ${otp} for email: ${email}`);
+  logger.info(`Generated OTP: ${otp} for email: ${email}`);
 
   const user = await getUserByEmail(email);
   if (!user) {
