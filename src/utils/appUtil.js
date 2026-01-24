@@ -105,6 +105,26 @@ function determinePurchaseType(serviceId) {
   }
 }
 
+function generateRequestId(extraLength = 10) {
+  // Get current time in Africa/Lagos timezone
+  const now = new Date().toLocaleString('en-US', { timeZone: 'Africa/Lagos' });
+  const dateObj = new Date(now);
+
+  // Build the first 12 numeric characters YYYYMMDDHHmm
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  const hour = String(dateObj.getHours()).padStart(2, '0');
+  const minute = String(dateObj.getMinutes()).padStart(2, '0');
+
+  const timestamp = `${year}${month}${day}${hour}${minute}`; // 12 chars
+
+  // Generate optional extra alphanumeric part
+  const alphanumeric = [...Array(extraLength)].map(() => Math.random().toString(36)[2]).join('');
+
+  return `${timestamp}${alphanumeric}`;
+}
+
 module.exports = {
   generateSecureOTP,
   hashPassword,
@@ -115,4 +135,5 @@ module.exports = {
   toTitleCase,
   generateReferences,
   determinePurchaseType,
+  generateRequestId,
 };
