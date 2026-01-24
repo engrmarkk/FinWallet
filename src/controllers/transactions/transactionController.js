@@ -208,7 +208,7 @@ const transferController = async (req, res) => {
       );
     }
     categoryId = await getTransactionCategoryByName('transfer').then((cat) => cat._id);
-    const reference = await generateReferences();
+    const reference = generateReferences();
     logger.info(`Reference for transfer: ${reference}`);
 
     const newTransaction = await createTransaction(
