@@ -1,4 +1,7 @@
 const { PaystackBase } = require('./base');
+const Logger = require('../../utils/logger');
+
+const logger = new Logger();
 
 class PaystackService extends PaystackBase {
   constructor() {
@@ -13,11 +16,11 @@ class PaystackService extends PaystackBase {
         method: 'GET',
         headers: this.headers,
       });
-      console.log(`Paystack getAllBanks response status: ${response.status}`);
+      logger.info(`Paystack getAllBanks response status: ${response.status}`);
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error fetching banks from Paystack:', error);
+      logger.error('Error fetching banks from Paystack:', error);
       throw error;
     }
   }
@@ -30,11 +33,11 @@ class PaystackService extends PaystackBase {
         method: 'GET',
         headers: this.headers,
       });
-      console.log(`Paystack resolveAccountNumber response status: ${response.status}`);
+      logger.info(`Paystack resolveAccountNumber response status: ${response.status}`);
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error resolving account number with Paystack:', error);
+      logger.error(`Error resolving account number with Paystack: ${error}`);
       throw error;
     }
   }
