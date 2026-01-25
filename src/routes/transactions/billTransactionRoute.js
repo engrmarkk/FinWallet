@@ -4,7 +4,7 @@ const {
   getServicesController,
   getVariationsController,
   verifyMeterAndSmartcardNumberController,
-  purchaseBillController
+  purchaseBillController,
 } = require('../../controllers/transactions/billTransactionController');
 const { authenticate } = require('../../middlewares/authHandler');
 
