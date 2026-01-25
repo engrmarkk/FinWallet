@@ -271,7 +271,7 @@ const purchaseBillController = async (req, res) => {
     }
 
     const userBalance = await getUserBalance(user._id);
-    
+
     if (amount > userBalance) {
       return apiResponse(
         res,
