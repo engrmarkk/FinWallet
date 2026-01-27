@@ -10,6 +10,8 @@ const {
   creditOrDebitUserWallet,
 } = require('../../dbCruds/transactionCrud');
 const { getUserBalance } = require('../../dbCruds/userCrud');
+const { refundTransaction } = require('../../dbCruds/backgroundCrud');
+const { vtpassQueue } = require('../../queues/vtpass_queue.js');
 
 const vtpass = new VtpassService();
 
@@ -185,7 +187,7 @@ const purchaseBillController = async (req, res) => {
     const billersCode = req.body.billersCode;
     const variation_code = req.body.variation_code;
     const subscription_type = req.body.subscription_type;
-    const phone = req.body.phone;
+    const phone = req.body.phone || user.phoneNumber;
     const amount = req.body.amount;
     const quantity = req.body.quantity || 1;
     if (!serviceID) {
@@ -225,14 +227,22 @@ const purchaseBillController = async (req, res) => {
           StatusResponse.FAILED
         );
       }
+
+      if (process.env.ENVIRONMENT === 'development') {
+        payload.phone = '08011111111';
+      }
     } else if (purchaseType === 'data') {
-      if (!billersCode || !variation_code || !phone || !amount) {
+      if (!billersCode || !variation_code || !amount) {
         return apiResponse(
           res,
-          'billersCode, variation_code, phone and amount are required for data purchase',
+          'billersCode, variation_code and amount are required for data purchase',
           HttpStatusCodes.BAD_REQUEST,
           StatusResponse.FAILED
         );
+      }
+
+      if (process.env.ENVIRONMENT === 'development') {
+        billersCode = '08011111111';
       }
 
       payload.billersCode = billersCode;
@@ -300,23 +310,54 @@ const purchaseBillController = async (req, res) => {
 
     await creditOrDebitUserWallet(user._id, amount, 'debit');
 
+    if (process.env.ENVIRONMENT === 'development') {
+      if (purchaseType === 'electricity') {
+        realBillersCode =
+          variation_code.toLowerCase() === 'prepaid' ? '1111111111111' : '1010101010101';
+      } else if (purchaseType === 'cable') {
+        realBillersCode = '1212121212';
+      } else {
+        realBillersCode = billersCode;
+      }
+      // replace billersCode with realBillersCode
+      payload.billersCode = realBillersCode;
+    }
+
     const vtpassResponse = await vtpass.purchaseProduct(payload);
+
+    logger.info(`Vtpass responseeeee: ${JSON.stringify(vtpassResponse)}`);
 
     // if the code is "000", update the transaction status to completed
     if (vtpassResponse.code === '000') {
-      // update the bill transaction status to completed
-      // update the main transaction status to completed
+      vtpassQueue.add('saveResponse', {
+        request_id,
+        content: vtpassResponse.content
+      });
+      logger.info("Bill purchase successful");
       return apiResponse(
         res,
         'Bill purchase successful',
         HttpStatusCodes.OK,
         StatusResponse.SUCCESS
       );
+    } else if (vtpassResponse.code === '099') {
+      // recheck the transaction after some time
+      await vtpassQueue.add(
+        'requery',
+        { request_id },
+        {
+          attempts: 5,
+          backoff: {
+            type: 'exponential',
+            delay: 600000,
+          },
+          removeOnComplete: true,
+          removeOnFail: false,
+        }
+      );
+      return apiResponse(res, 'Bill purchase pending', HttpStatusCodes.OK, StatusResponse.SUCCESS);
     } else {
-      // update the bill transaction status to failed
-      // update the main transaction status to failed
-      // there should be a refund logic here
-
+      await refundTransaction(request_id);
       return apiResponse(
         res,
         vtpassResponse.response_description || 'Bill purchase failed',
