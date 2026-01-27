@@ -331,9 +331,9 @@ const purchaseBillController = async (req, res) => {
     if (vtpassResponse.code === '000') {
       vtpassQueue.add('saveResponse', {
         request_id,
-        content: vtpassResponse.content
+        content: vtpassResponse.content,
       });
-      logger.info("Bill purchase successful");
+      logger.info('Bill purchase successful');
       return apiResponse(
         res,
         'Bill purchase successful',
