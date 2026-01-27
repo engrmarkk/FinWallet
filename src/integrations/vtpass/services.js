@@ -75,6 +75,24 @@ class VtpassService extends VtpassBase {
       throw error;
     }
   }
+
+  // requery
+  async requeryTransaction(request_id) {
+    try {
+      const url = `${this.baseUrl}/api/requery`;
+      const response = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ request_id }),
+        headers: this.headers,
+      });
+      logger.info(`Vtpass requeryTransaction response status: ${response.status}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      logger.error(`Error requerying transaction with Vtpass: ${error}`);
+      throw error;
+    }
+  }
 }
 
 module.exports = { VtpassService };
