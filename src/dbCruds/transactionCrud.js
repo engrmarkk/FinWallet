@@ -22,15 +22,20 @@ const creditOrDebitUserWallet = async (userId, amount, type) => {
 const getTransactionCategoryByName = async (name) => {
   const category = await TransactionCategory.findOne({ name });
   // if category does not exist create it
-  if (!category) {
-    category = await createTransactionCategory(name);
-  }
+//   if (!category) {
+//     category = await createTransactionCategory(name);
+//   }
   return category;
 };
 
 // get transaction category by id
 const getTransactionCategoryById = async (id) => {
   return await TransactionCategory.findById(id);
+};
+
+// get transaction by id
+const getTransactionById = async (reference) => {
+  return await Transaction.findOne({ reference });
 };
 
 // create transaction category
@@ -133,4 +138,5 @@ module.exports = {
   getTransactionCategories,
   creditOrDebitUserWallet,
   getTransactionByReference,
+  getTransactionById,
 };
