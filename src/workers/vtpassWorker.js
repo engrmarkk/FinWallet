@@ -33,12 +33,10 @@ const logger = new Logger();
     vtpassWorker.on('failed', (job, err) => {
       console.log(`Job ${job.id} failed: ${err.message}`);
     });
-
   } catch (error) {
     logger.error('MongoDB connection failed@vtpassWorker: ' + error.message);
     process.exit(1);
   }
 })();
-
 
 // module.exports = { vtpassWorker };
