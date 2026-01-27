@@ -53,7 +53,7 @@ const transactionSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
+      enum: ['pending', 'completed', 'failed', 'refunded'],
       default: 'pending',
     },
     narration: {
@@ -144,8 +144,24 @@ const billTransactionSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
+      enum: ['pending', 'completed', 'failed', 'refunded'],
       default: 'pending',
+    },
+    customerName: {
+      type: String,
+      required: false,
+    },
+    customerAddress: {
+      type: String,
+      required: false,
+    },
+    token: {
+      type: String,
+      required: false,
+    },
+    unit: {
+      type: String,
+      required: false,
     },
   },
   { timestamps: true }
