@@ -22,9 +22,9 @@ const creditOrDebitUserWallet = async (userId, amount, type) => {
 const getTransactionCategoryByName = async (name) => {
   const category = await TransactionCategory.findOne({ name });
   // if category does not exist create it
-//   if (!category) {
-//     category = await createTransactionCategory(name);
-//   }
+  //   if (!category) {
+  //     category = await createTransactionCategory(name);
+  //   }
   return category;
 };
 
