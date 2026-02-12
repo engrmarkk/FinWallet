@@ -8,6 +8,8 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    volumes:
+      - logs_data:/app/logs
     depends_on:
       - mongo
       - redis
@@ -20,6 +22,8 @@ services:
     container_name: finwallet_worker
     env_file:
       - .env
+    volumes:
+      - logs_data:/app/logs
     depends_on:
       - mongo
       - redis
@@ -43,3 +47,4 @@ services:
 
 volumes:
   mongo_data:
+  logs_data:
