@@ -29,7 +29,7 @@ const connectDB = async () => {
 
 connectDB();
 
-const PORT = process.env.APP_PORT || 3000;
+const PORT = process.env.APP_PORT || 5000;
 const apiVersion = '/api/v1';
 
 app.use(express.json());
