@@ -5,7 +5,7 @@ const {
   createTransactionCategory,
   getTransactionCategories,
   createTransaction,
-  getTransactionCategoryByName,
+  getTransactions,
   creditOrDebitUserWallet,
   getTransactionByReference,
 } = require('../../dbCruds/transactionCrud');
@@ -240,9 +240,30 @@ const transferController = async (req, res) => {
   }
 };
 
+// get transactions with pagination and optional filtering, all are query params
+const getTransactionsController = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const transactions = await getTransactions(page, limit, req.query);
+    return apiResponse(
+      res,
+      'Transactions fetched successfully',
+      HttpStatusCodes.OK,
+      StatusResponse.SUCCESS,
+      transactions
+    );
+  } catch (error) {
+    logger.error(`Error in getTransactionsController: ${error}`);
+    return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
+  }
+}
+
 module.exports = {
   createTransactionCategoryController,
   getTransactionCategoriesController,
   topUpController,
   transferController,
+  getTransactionsController
 };
