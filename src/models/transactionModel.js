@@ -93,9 +93,8 @@ transactionSchema.set('toJSON', {
 
     ret.createdAt = formatDate(ret.createdAt);
     ret.updatedAt = formatDate(ret.updatedAt);
-    
-    if (ret.categoryId) {
-      ret.category = ret.categoryId.name;   // show name
+    if (ret.categoryId && typeof ret.categoryId === 'object') {
+      ret.category = ret.categoryId.name; // show name
       ret.categoryId = ret.categoryId._id.toString(); // keep id optional
     } else {
       ret.categoryId = ret.categoryId.toString();
@@ -172,6 +171,20 @@ const billTransactionSchema = new Schema(
   },
   { timestamps: true }
 );
+
+billTransactionSchema.set('toJSON', {
+  transform: (doc, ret) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+
+    ret.createdAt = formatDate(ret.createdAt);
+    ret.updatedAt = formatDate(ret.updatedAt);
+    // remove version key
+    delete ret.__v;
+
+    return ret;
+  },
+});
 
 module.exports = {
   Transaction: mongoose.model('Transaction', transactionSchema),
