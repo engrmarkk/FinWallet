@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.api
     container_name: finwallet_api
     ports:
-      - "5000:5000"
+      - '5000:5000'
     env_file:
       - .env
     volumes:
@@ -33,7 +33,7 @@ services:
     image: mongo:4.4 # can be changed to 7
     container_name: finwallet_mongo
     ports:
-      - "27017:27017"
+      - '27017:27017'
     volumes:
       - mongo_data:/data/db
     restart: always
@@ -42,7 +42,7 @@ services:
     image: redis:7
     container_name: finwallet_redis
     ports:
-      - "6382:6379"
+      - '6382:6379'
     restart: always
 
 volumes:
