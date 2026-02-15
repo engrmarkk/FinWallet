@@ -3,7 +3,7 @@ const router = express.Router();
 const {
   getTransactionCategoriesController,
   transferController,
-  getTransactionsController
+  getTransactionsController,
 } = require('../../controllers/transactions/transactionController');
 const { authenticate } = require('../../middlewares/authHandler');
 
