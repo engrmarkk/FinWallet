@@ -29,11 +29,41 @@ const getTransactionCategoryByName = async (name) => {
 };
 
 const getTransactions = async (page, limit, filter) => {
+  // 1) Fetch transactions
   const transactions = await Transaction.find(filter)
+    .populate({ path: 'categoryId', select: 'name', options: { lean: true } })
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
     .limit(limit);
-  return transactions.map((t) => t.toJSON());
+
+  const parsedTransactions = transactions.map((t) => t.toJSON());
+
+  const BILL_CATEGORIES = ['airtime', 'cable', 'electricity', 'data'];
+
+  const billTransactionIds = parsedTransactions
+    .filter((t) => BILL_CATEGORIES.includes(t.category?.toLowerCase()))
+    .map((t) => t.id);
+
+  if (billTransactionIds.length === 0) return parsedTransactions;
+
+  const billTransactions = await BillTransaction.find({
+    transactionId: { $in: billTransactionIds },
+  });
+
+  const parsedBills = billTransactions.map((b) => b.toJSON());
+
+  const billMap = {};
+  for (const bill of parsedBills) {
+    billMap[bill.transactionId.toString()] = bill;
+  }
+
+  for (const tx of parsedTransactions) {
+    if (billMap[tx.id]) {
+      tx.bill = billMap[tx.id];
+    }
+  }
+
+  return parsedTransactions;
 };
 
 // get transaction category by id
@@ -147,5 +177,5 @@ module.exports = {
   creditOrDebitUserWallet,
   getTransactionByReference,
   getTransactionById,
-  getTransactions
+  getTransactions,
 };
