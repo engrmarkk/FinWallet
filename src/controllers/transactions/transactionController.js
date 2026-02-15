@@ -124,7 +124,7 @@ const topUpController = async (req, res) => {
     logger.info(`User ID for top up: ${userId}`);
 
     transStatus = 'completed';
-    categoryId = await getTransactionCategoryByName('top up').then((cat) => cat._id);
+    categoryId = await createTransactionCategory('top up').then((cat) => cat._id);
     logger.info(`Top up category ID: ${categoryId}`);
     type = 'credit';
 
