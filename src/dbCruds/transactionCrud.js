@@ -28,6 +28,14 @@ const getTransactionCategoryByName = async (name) => {
   return category;
 };
 
+const getTransactions = async (page, limit, filter) => {
+  const transactions = await Transaction.find(filter)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit);
+  return transactions.map((t) => t.toJSON());
+};
+
 // get transaction category by id
 const getTransactionCategoryById = async (id) => {
   return await TransactionCategory.findById(id);
@@ -139,4 +147,5 @@ module.exports = {
   creditOrDebitUserWallet,
   getTransactionByReference,
   getTransactionById,
+  getTransactions
 };
