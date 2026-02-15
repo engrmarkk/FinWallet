@@ -93,7 +93,13 @@ transactionSchema.set('toJSON', {
 
     ret.createdAt = formatDate(ret.createdAt);
     ret.updatedAt = formatDate(ret.updatedAt);
-    ret.categoryId = ret.categoryId.toString();
+    
+    if (ret.categoryId) {
+      ret.category = ret.categoryId.name;   // show name
+      ret.categoryId = ret.categoryId._id.toString(); // keep id optional
+    } else {
+      ret.categoryId = ret.categoryId.toString();
+    }
     // remove version key
     delete ret.__v;
 
