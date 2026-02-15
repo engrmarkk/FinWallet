@@ -30,7 +30,7 @@ services:
     restart: always
 
   mongo:
-    image: mongo:7
+    image: mongo:4.4 # can be changed to 7
     container_name: finwallet_mongo
     ports:
       - "27017:27017"
