@@ -258,12 +258,12 @@ const getTransactionsController = async (req, res) => {
     logger.error(`Error in getTransactionsController: ${error}`);
     return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
   }
-}
+};
 
 module.exports = {
   createTransactionCategoryController,
   getTransactionCategoriesController,
   topUpController,
   transferController,
-  getTransactionsController
+  getTransactionsController,
 };
