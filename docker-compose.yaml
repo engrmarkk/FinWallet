@@ -14,6 +14,7 @@ services:
       # - mongo
       - redis
     restart: always
+    init: true
 
   worker:
     build:
@@ -28,6 +29,7 @@ services:
       # - mongo
       - redis
     restart: always
+    init: true
 
   # mongo:
   #   image: mongo:4.4 # can be changed to 7
