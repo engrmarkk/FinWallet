@@ -11,7 +11,7 @@ services:
     volumes:
       - ./logs:/app/logs
     depends_on:
-      - mongo
+      # - mongo
       - redis
     restart: always
 
@@ -25,18 +25,18 @@ services:
     volumes:
       - ./logs:/app/logs
     depends_on:
-      - mongo
+      # - mongo
       - redis
     restart: always
 
-  mongo:
-    image: mongo:4.4 # can be changed to 7
-    container_name: finwallet_mongo
-    ports:
-      - '27017:27017'
-    volumes:
-      - mongo_data:/data/db
-    restart: always
+  # mongo:
+  #   image: mongo:4.4 # can be changed to 7
+  #   container_name: finwallet_mongo
+  #   ports:
+  #     - '27017:27017'
+  #   volumes:
+  #     - mongo_data:/data/db
+  #   restart: always
 
   redis:
     image: redis:7
@@ -45,6 +45,6 @@ services:
       - '6382:6379'
     restart: always
 
-volumes:
-  mongo_data:
+# volumes:
+#   mongo_data:
   # logs_data:
