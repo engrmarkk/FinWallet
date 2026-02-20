@@ -38,13 +38,11 @@ const userSchema = new Schema(
       type: String,
       required: false,
       unique: true,
-      index: true,
     },
     nin: {
       type: String,
       required: false,
       unique: true,
-      index: true,
     },
     accountLevel: {
       type: String,
