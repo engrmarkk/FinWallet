@@ -39,6 +39,10 @@ const userSchema = new Schema(
       required: false,
       unique: true,
     },
+    transaction_pin: {
+      type: String,
+      required: false,
+    },
     nin: {
       type: String,
       required: false,
