@@ -10,7 +10,7 @@ const {
   getTransactionByReference,
 } = require('../../dbCruds/transactionCrud');
 const { getBankAccountByAccountNumber, getUserBalance } = require('../../dbCruds/userCrud');
-const { generateReferences } = require('../../utils/appUtil');
+const { generateReferences, comparePassword } = require('../../utils/appUtil');
 // const { buildTransactionResponse } = require('../helpers/transHelper');
 const Logger = require('../../utils/logger');
 
@@ -178,11 +178,39 @@ const transferController = async (req, res) => {
         StatusResponse.FAILED
       );
     }
-    const { amount, narration, bankName, accountNumber, accountName, bankCode } = req.body;
+    const { amount, narration, bankName, accountNumber, accountName, bankCode, pin } = req.body;
     if (!amount || amount <= 0) {
       return apiResponse(
         res,
         'Amount is required and must be greater than 0',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    if (!pin) {
+      return apiResponse(
+        res,
+        'Transaction pin is required',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    const user = req.user;
+    if (!user.transaction_pin) {
+      return apiResponse(
+        res,
+        'Transaction pin not set. Please set your transaction pin before making transfers.',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+    const isPinValid = await comparePassword(pin, user.transaction_pin);
+    if (!isPinValid) {
+      return apiResponse(
+        res,
+        'Invalid transaction pin',
         HttpStatusCodes.BAD_REQUEST,
         StatusResponse.FAILED
       );
@@ -197,7 +225,6 @@ const transferController = async (req, res) => {
       );
     }
 
-    user = req.user;
     const userBalance = await getUserBalance(user._id);
     if (amount > userBalance) {
       return apiResponse(
