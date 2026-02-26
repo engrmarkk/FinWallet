@@ -190,6 +190,25 @@ const purchaseBillController = async (req, res) => {
     const phone = req.body.phone || user.phoneNumber;
     const amount = req.body.amount;
     const quantity = req.body.quantity || 1;
+    const pin = req.body.pin;
+
+     if (!pin) {
+      return apiResponse(
+        res,
+        'Transaction pin is required',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+     if (!user.transaction_pin) {
+      return apiResponse(
+        res,
+        'Transaction pin not set. Please set your transaction pin before making purchases.',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
     if (!serviceID) {
       return apiResponse(
         res,
@@ -278,6 +297,16 @@ const purchaseBillController = async (req, res) => {
         HttpStatusCodes.BAD_REQUEST,
         StatusResponse.FAILED
       );
+    }
+
+    const isPinValid = await comparePassword(pin, user.transaction_pin);
+    if (!isPinValid) {
+      return apiResponse(
+        res,
+        'Invalid transaction pin',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+       );
     }
 
     const userBalance = await getUserBalance(user._id);
