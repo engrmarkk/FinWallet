@@ -2,8 +2,9 @@ const { apiResponse } = require('../utils/apiResponse');
 const HttpStatusCodes = require('../utils/statusCodes');
 const StatusResponse = require('../utils/statusResponse');
 const { PaystackService } = require('../integrations/paystack/services');
-const { getBankAccountByUser, getUserWalletByUser } = require('../dbCruds/userCrud');
+const { getBankAccountByUser, getUserWalletByUser, setTransactionPin } = require('../dbCruds/userCrud');
 const Logger = require('../utils/logger');
+const {comparePassword} = require('../utils/appUtil');
 
 const logger = new Logger();
 
@@ -126,10 +127,93 @@ const getMyWalletDetailsController = async (req, res) => {
   }
 };
 
+// set transaction pin controller
+const setTransactionPinController = async (req, res) => {
+  const { pin } = req.body;
+  if (!pin || pin.length !== 4) {
+    return apiResponse(
+      res,
+      'A valid 4-digit transaction pin is required',
+      HttpStatusCodes.BAD_REQUEST,
+      StatusResponse.FAILED
+    );
+  }
+
+  try {
+    const user = req.user;
+    if (user.transaction_pin) {
+      return apiResponse(
+        res,
+        'Transaction pin already set.',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+    await setTransactionPin(user._id, pin);
+    return apiResponse(
+      res,
+      'Transaction pin set successfully',
+      HttpStatusCodes.OK,
+      StatusResponse.SUCCESS
+    );
+  } catch (error) {
+    logger.error(`Error in setTransactionPinController: ${error}`);
+    return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
+  }
+};
+
+// change transaction pin controller
+const changeTransactionPinController = async (req, res) => {
+  const { oldPin, newPin } = req.body;
+  if (!oldPin || !newPin || newPin.length !== 4) {
+    return apiResponse(
+      res,
+      'Old pin and a valid 4-digit new pin are required',
+      HttpStatusCodes.BAD_REQUEST,
+      StatusResponse.FAILED
+    );
+  }
+
+  try {
+    const user = req.user;
+    if (!user.transaction_pin) {
+      return apiResponse(
+        res,
+        'No existing transaction pin found. Please set a transaction pin first.',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    const isOldPinValid = await comparePassword(oldPin, user.transaction_pin);
+    if (!isOldPinValid) {
+      return apiResponse(
+        res,
+        'Old transaction pin is incorrect',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    await setTransactionPin(user._id, newPin);
+    return apiResponse(
+      res,
+      'Transaction pin changed successfully',
+      HttpStatusCodes.OK,
+      StatusResponse.SUCCESS
+    );
+  } catch (error) {
+    logger.error(`Error in changeTransactionPinController: ${error}`);
+    return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
+  }
+};
+
 module.exports = {
   getUserDetails,
   getBanksController,
   resolveAccountNumberController,
   getMyBankDetailsController,
   getMyWalletDetailsController,
+  setTransactionPinController,
+  changeTransactionPinController
 };
