@@ -8,6 +8,7 @@ const {
   getTransactions,
   creditOrDebitUserWallet,
   getTransactionByReference,
+  saveUserBeneficiary,
 } = require('../../dbCruds/transactionCrud');
 const { getBankAccountByAccountNumber, getUserBalance } = require('../../dbCruds/userCrud');
 const { generateReferences, comparePassword } = require('../../utils/appUtil');
@@ -178,7 +179,7 @@ const transferController = async (req, res) => {
         StatusResponse.FAILED
       );
     }
-    const { amount, narration, bankName, accountNumber, accountName, bankCode, pin } = req.body;
+    const { amount, narration, bankName, accountNumber, accountName, bankCode, pin, saveBeneficiary = false } = req.body;
     if (!amount || amount <= 0) {
       return apiResponse(
         res,
@@ -253,6 +254,10 @@ const transferController = async (req, res) => {
     );
 
     await creditOrDebitUserWallet(user._id, amount, 'debit');
+
+    if (saveBeneficiary) {
+      await saveUserBeneficiary(user._id, bankName, accountNumber, accountName, bankCode);
+    }
 
     return apiResponse(
       res,
