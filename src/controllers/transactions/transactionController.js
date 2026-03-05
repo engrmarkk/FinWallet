@@ -179,7 +179,16 @@ const transferController = async (req, res) => {
         StatusResponse.FAILED
       );
     }
-    const { amount, narration, bankName, accountNumber, accountName, bankCode, pin, saveBeneficiary = false } = req.body;
+    const {
+      amount,
+      narration,
+      bankName,
+      accountNumber,
+      accountName,
+      bankCode,
+      pin,
+      saveBeneficiary = false,
+    } = req.body;
     if (!amount || amount <= 0) {
       return apiResponse(
         res,
