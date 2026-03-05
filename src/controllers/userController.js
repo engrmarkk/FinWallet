@@ -5,6 +5,7 @@ const { PaystackService } = require('../integrations/paystack/services');
 const { getBankAccountByUser, getUserWalletByUser, setTransactionPin } = require('../dbCruds/userCrud');
 const Logger = require('../utils/logger');
 const {comparePassword} = require('../utils/appUtil');
+const { connection } = require('../config/redis.js');
 
 const logger = new Logger();
 
@@ -67,9 +68,24 @@ const resolveAccountNumberController = async (req, res) => {
   }
 
   try {
+    // get from redis
+    const cacheKey = `resolveAccount:${accountNumber}:${bankCode}`;
+    const cachedData = await connection.get(cacheKey);
+    if (cachedData) {
+      logger.info(`Cache hit for account resolution: ${cacheKey}`);
+      return apiResponse(
+        res,
+        'Account resolved successfully (from cache)',
+        HttpStatusCodes.OK,
+        StatusResponse.SUCCESS,
+        JSON.parse(cachedData)
+      );
+    }
     const resolutionData = await ps.resolveAccountNumber(accountNumber, bankCode);
-    logger.info(`Account resolution data from Paystack: ${resolutionData.data}`);
+    logger.info(`Account resolution data from Paystack: ${JSON.stringify(resolutionData, null, 2)}`);
     if (resolutionData.status) {
+      // cache for 24 hours
+      await connection.set(cacheKey, JSON.stringify(resolutionData.data), 'EX', 24 * 60 * 60);
       return apiResponse(
         res,
         'Account resolved successfully',
