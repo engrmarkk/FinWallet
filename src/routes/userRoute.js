@@ -7,7 +7,7 @@ const {
   getMyBankDetailsController,
   getMyWalletDetailsController,
   setTransactionPinController,
-  changeTransactionPinController
+  changeTransactionPinController,
 } = require('../controllers/userController');
 const { authenticate } = require('../middlewares/authHandler');
 
