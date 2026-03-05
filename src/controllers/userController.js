@@ -6,6 +6,7 @@ const {
   getBankAccountByUser,
   getUserWalletByUser,
   setTransactionPin,
+  getUserBeneficiaries
 } = require('../dbCruds/userCrud');
 const Logger = require('../utils/logger');
 const { comparePassword } = require('../utils/appUtil');
@@ -244,6 +245,24 @@ const changeTransactionPinController = async (req, res) => {
   }
 };
 
+// get user beneficiaries controller
+const getUserBeneficiariesController = async (req, res) => {
+  try {
+    const user = req.user;
+    const beneficiaries = await getUserBeneficiaries(user._id);
+    return apiResponse(
+      res,
+      'Beneficiaries fetched successfully',
+      HttpStatusCodes.OK,
+      StatusResponse.SUCCESS,
+      beneficiaries
+    );
+  } catch (error) {
+    logger.error(`Error in getUserBeneficiariesController: ${error}`);
+    return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
+  }
+};
+
 module.exports = {
   getUserDetails,
   getBanksController,
@@ -252,4 +271,5 @@ module.exports = {
   getMyWalletDetailsController,
   setTransactionPinController,
   changeTransactionPinController,
+  getUserBeneficiariesController,
 };
