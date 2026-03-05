@@ -1,4 +1,9 @@
-const { Transaction, BillTransaction, TransactionCategory } = require('../models/transactionModel');
+const {
+  Transaction,
+  BillTransaction,
+  TransactionCategory,
+  Beneficiary,
+} = require('../models/transactionModel');
 const { Wallet } = require('../models/userModel');
 const Logger = require('../utils/logger');
 
@@ -167,6 +172,22 @@ const getTransactionByReference = async (reference) => {
   return await Transaction.findOne({ reference, status: 'completed' });
 };
 
+// save beneficiary if it does not exist
+const saveUserBeneficiary = async (userId, bankName, accountNumber, accountName, bankCode) => {
+  // Check only for the unique things (Account + Bank) for that specific User
+  let beneficiary = await Beneficiary.findOne({ userId, accountNumber, bankCode });
+
+  if (!beneficiary) {
+    beneficiary = new Beneficiary({ userId, bankName, accountNumber, accountName, bankCode });
+    await beneficiary.save();
+    logger.info(`Saved new beneficiary for user ${userId}: ${bankName} ${accountNumber}`);
+  } else {
+    logger.info(`Beneficiary already exists for user ${userId}: ${bankName} ${accountNumber}`);
+  }
+
+  return beneficiary;
+};
+
 module.exports = {
   createTransactionCategory,
   createTransaction,
@@ -178,4 +199,5 @@ module.exports = {
   getTransactionByReference,
   getTransactionById,
   getTransactions,
+  saveUserBeneficiary,
 };
