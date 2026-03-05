@@ -47,7 +47,6 @@ const setTransactionPin = async (userId, pin) => {
   await user.save();
 };
 
-
 module.exports = {
   getBankAccountByUser,
   getUserWalletByUser,
