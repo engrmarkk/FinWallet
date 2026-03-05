@@ -2,9 +2,13 @@ const { apiResponse } = require('../utils/apiResponse');
 const HttpStatusCodes = require('../utils/statusCodes');
 const StatusResponse = require('../utils/statusResponse');
 const { PaystackService } = require('../integrations/paystack/services');
-const { getBankAccountByUser, getUserWalletByUser, setTransactionPin } = require('../dbCruds/userCrud');
+const {
+  getBankAccountByUser,
+  getUserWalletByUser,
+  setTransactionPin,
+} = require('../dbCruds/userCrud');
 const Logger = require('../utils/logger');
-const {comparePassword} = require('../utils/appUtil');
+const { comparePassword } = require('../utils/appUtil');
 const { connection } = require('../config/redis.js');
 
 const logger = new Logger();
@@ -31,8 +35,22 @@ const getUserDetails = async (req, res) => {
 // get banks conroller
 const getBanksController = async (req, res) => {
   try {
+    // check redis cache first
+    const cachedBanks = await connection.get('banksList');
+    if (cachedBanks) {
+      logger.info('Cache hit for banks list');
+      return apiResponse(
+        res,
+        'Banks fetched successfully (from cache)',
+        HttpStatusCodes.OK,
+        StatusResponse.SUCCESS,
+        JSON.parse(cachedBanks)
+      );
+    }
     const banksData = await ps.getAllBanks();
     if (banksData.status) {
+      // cache for 24 hours
+      await connection.set('banksList', JSON.stringify(banksData.data), 'EX', 24 * 60 * 60);
       return apiResponse(
         res,
         'Banks fetched successfully',
@@ -82,7 +100,9 @@ const resolveAccountNumberController = async (req, res) => {
       );
     }
     const resolutionData = await ps.resolveAccountNumber(accountNumber, bankCode);
-    logger.info(`Account resolution data from Paystack: ${JSON.stringify(resolutionData, null, 2)}`);
+    logger.info(
+      `Account resolution data from Paystack: ${JSON.stringify(resolutionData, null, 2)}`
+    );
     if (resolutionData.status) {
       // cache for 24 hours
       await connection.set(cacheKey, JSON.stringify(resolutionData.data), 'EX', 24 * 60 * 60);
@@ -231,5 +251,5 @@ module.exports = {
   getMyBankDetailsController,
   getMyWalletDetailsController,
   setTransactionPinController,
-  changeTransactionPinController
+  changeTransactionPinController,
 };
