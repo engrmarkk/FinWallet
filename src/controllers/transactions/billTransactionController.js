@@ -192,7 +192,7 @@ const purchaseBillController = async (req, res) => {
     const quantity = req.body.quantity || 1;
     const pin = req.body.pin;
 
-     if (!pin) {
+    if (!pin) {
       return apiResponse(
         res,
         'Transaction pin is required',
@@ -201,7 +201,7 @@ const purchaseBillController = async (req, res) => {
       );
     }
 
-     if (!user.transaction_pin) {
+    if (!user.transaction_pin) {
       return apiResponse(
         res,
         'Transaction pin not set. Please set your transaction pin before making purchases.',
@@ -306,7 +306,7 @@ const purchaseBillController = async (req, res) => {
         'Invalid transaction pin',
         HttpStatusCodes.BAD_REQUEST,
         StatusResponse.FAILED
-       );
+      );
     }
 
     const userBalance = await getUserBalance(user._id);
