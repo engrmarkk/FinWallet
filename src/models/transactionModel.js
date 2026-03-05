@@ -186,8 +186,51 @@ billTransactionSchema.set('toJSON', {
   },
 });
 
+const beneficiarySchema = new Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true,
+    },
+    accountName: {
+      type: String,
+      required: true,
+    },
+    accountNumber: {
+      type: String,
+      required: true,
+    },
+    bankName: {
+      type: String,
+      required: true,
+    },
+    bankCode: {
+      type: String,
+      required: true,
+    },
+  },
+  { timestamps: true }
+);
+
+beneficiarySchema.set('toJSON', {
+  transform: (doc, ret) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+
+    ret.createdAt = formatDate(ret.createdAt);
+    ret.updatedAt = formatDate(ret.updatedAt);
+    // remove version key
+    delete ret.__v;
+
+    return ret;
+  },
+});
+
 module.exports = {
   Transaction: mongoose.model('Transaction', transactionSchema),
   BillTransaction: mongoose.model('BillTransaction', billTransactionSchema),
   TransactionCategory: mongoose.model('TransactionCategory', transactionCategories),
+  Beneficiary: mongoose.model('Beneficiary', beneficiarySchema),
 };
