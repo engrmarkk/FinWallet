@@ -68,7 +68,7 @@ const resolveAccountNumberController = async (req, res) => {
 
   try {
     const resolutionData = await ps.resolveAccountNumber(accountNumber, bankCode);
-    logger.info(`Account resolution data from Paystack: ${resolutionData}`);
+    logger.info(`Account resolution data from Paystack: ${resolutionData.data}`);
     if (resolutionData.status) {
       return apiResponse(
         res,
