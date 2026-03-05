@@ -1,4 +1,5 @@
 const { BankAccount, Wallet, User } = require('../models/userModel');
+const { Beneficiary } = require('../models/transactionModel');
 const { hashPassword } = require('../utils/appUtil');
 
 // get bank account by userId, if not found create one
@@ -47,10 +48,16 @@ const setTransactionPin = async (userId, pin) => {
   await user.save();
 };
 
+// get user beneficiaries
+const getUserBeneficiaries = async (userId) => {
+  return await Beneficiary.find({ userId });
+};
+
 module.exports = {
   getBankAccountByUser,
   getUserWalletByUser,
   getBankAccountByAccountNumber,
   getUserBalance,
   setTransactionPin,
+  getUserBeneficiaries,
 };
