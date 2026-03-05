@@ -6,7 +6,7 @@ const {
   getBankAccountByUser,
   getUserWalletByUser,
   setTransactionPin,
-  getUserBeneficiaries
+  getUserBeneficiaries,
 } = require('../dbCruds/userCrud');
 const Logger = require('../utils/logger');
 const { comparePassword } = require('../utils/appUtil');
