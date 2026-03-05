@@ -28,7 +28,9 @@ class PaystackService extends PaystackBase {
   // resolve account number
   async resolveAccountNumber(accountNumber, bankCode) {
     try {
-      const url = `${this.baseUrl}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`;
+      // const url = `${this.baseUrl}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`;
+      const url = `${this.baseUrl}/bank/resolve?account_number=${accountNumber}&bank_code=001`;
+      // 001
       const response = await fetch(url, {
         method: 'GET',
         headers: this.headers,
