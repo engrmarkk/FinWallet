@@ -13,6 +13,8 @@ const {
 } = require('../dbCruds/authCrud');
 const { generateSecureOTP, validateEmail, comparePassword } = require('../utils/appUtil');
 const Logger = require('../utils/logger');
+const jwt = require('jsonwebtoken');
+const { connection } = require('../config/redis.js');
 
 const logger = new Logger();
 
@@ -26,6 +28,7 @@ exports.loginController = async (req, res) => {
     );
   }
   const { email, password } = req.body;
+  const userAgent = req.headers['user-agent'] || 'unknown';
 
   logger.info(`Login attempt for email: ${email}`);
   const user = await getUserByEmail(email);
@@ -46,7 +49,7 @@ exports.loginController = async (req, res) => {
       { email: user.email, isVerified: user.emailVerified }
     );
   }
-  const access_token = createToken(user.id);
+  const access_token = createToken(user.id, userAgent);
   apiResponse(res, 'login successful', HttpStatusCodes.OK, StatusResponse.SUCCESS, {
     access_token,
     isVerified: user.emailVerified,
@@ -161,6 +164,7 @@ exports.verifyAccountController = async (req, res) => {
     );
   }
   const { email, otp } = req.body;
+  const userAgent = req.headers['user-agent'] || 'unknown';
   logger.info(`Verifying account for email: ${email} with OTP: ${otp}`);
 
   if (!otp) {
@@ -219,7 +223,7 @@ exports.verifyAccountController = async (req, res) => {
   await user.save();
   await userSess.save();
 
-  const access_token = createToken(user.id);
+  const access_token = createToken(user.id, userAgent);
 
   return apiResponse(
     res,
@@ -277,4 +281,15 @@ exports.resendOTPController = async (req, res) => {
   }
 
   return apiResponse(res, 'OTP sent successfully', HttpStatusCodes.OK, StatusResponse.SUCCESS);
+};
+
+exports.logoutController = async (req, res) => {
+  try {
+    const jti = req.user.jti;
+    await connection.set(`blacklist_${jti}`, 'true', 'EX', 24 * 60 * 60);
+    return apiResponse(res, 'Logout successful', HttpStatusCodes.OK, StatusResponse.SUCCESS);
+  } catch (error) {
+    logger.error(`Error in logoutController: ${error}`);
+    return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
+  }
 };
