@@ -7,7 +7,8 @@ const logger = new Logger();
 
 // middleware/errorHandler.js
 function errorHandler(err, req, res, next) {
-  logger.error(err);
+  logger.error('An error occurred:', err);
+  logger.error(err.stack);
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
