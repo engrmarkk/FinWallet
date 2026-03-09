@@ -285,15 +285,20 @@ const transferController = async (req, res) => {
 const getTransactionsController = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.perPage) || 10;
 
-    const transactions = await getTransactions(page, limit, req.query);
+    const filters = { ...req.query };
+    delete filters.page;
+    delete filters.perPage;
+
+    const transactions = await getTransactions(page, limit, filters);
     return apiResponse(
       res,
       'Transactions fetched successfully',
       HttpStatusCodes.OK,
       StatusResponse.SUCCESS,
-      transactions
+      transactions.data,
+      transactions.pagination
     );
   } catch (error) {
     logger.error(`Error in getTransactionsController: ${error}`);
