@@ -34,7 +34,13 @@ const getTransactionCategoryByName = async (name) => {
 };
 
 const getTransactions = async (page, limit, filter) => {
-  // 1) Fetch transactions
+  // 1) Get total count for pagination
+  const totalItems = await Transaction.countDocuments(filter);
+
+  // 2) Calculate total pages
+  const totalPages = Math.ceil(totalItems / limit);
+
+  // 3) Fetch transactions with pagination
   const transactions = await Transaction.find(filter)
     .populate({ path: 'categoryId', select: 'name', options: { lean: true } })
     .sort({ createdAt: -1 })
@@ -49,26 +55,37 @@ const getTransactions = async (page, limit, filter) => {
     .filter((t) => BILL_CATEGORIES.includes(t.category?.toLowerCase()))
     .map((t) => t.id);
 
-  if (billTransactionIds.length === 0) return parsedTransactions;
+  if (billTransactionIds.length > 0) {
+    const billTransactions = await BillTransaction.find({
+      transactionId: { $in: billTransactionIds },
+    });
 
-  const billTransactions = await BillTransaction.find({
-    transactionId: { $in: billTransactionIds },
-  });
+    const parsedBills = billTransactions.map((b) => b.toJSON());
 
-  const parsedBills = billTransactions.map((b) => b.toJSON());
+    const billMap = {};
+    for (const bill of parsedBills) {
+      billMap[bill.transactionId.toString()] = bill;
+    }
 
-  const billMap = {};
-  for (const bill of parsedBills) {
-    billMap[bill.transactionId.toString()] = bill;
-  }
-
-  for (const tx of parsedTransactions) {
-    if (billMap[tx.id]) {
-      tx.bill = billMap[tx.id];
+    for (const tx of parsedTransactions) {
+      if (billMap[tx.id]) {
+        tx.bill = billMap[tx.id];
+      }
     }
   }
 
-  return parsedTransactions;
+  // 4) Return both data and pagination metadata
+  return {
+    data: parsedTransactions,
+    pagination: {
+      page,
+      perPage: limit,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
+  };
 };
 
 // get transaction category by id
