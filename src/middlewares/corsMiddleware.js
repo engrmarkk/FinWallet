@@ -1,6 +1,6 @@
 const cors = require('cors');
 
-const allowedOrigins = ['http://localhost:4200'];
+const allowedOrigins = ['http://localhost:4200', 'https://finwallet-ng.netlify.app'];
 
 const corsOptions = {
   origin: (origin, callback) => {
