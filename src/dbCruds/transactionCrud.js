@@ -33,15 +33,18 @@ const getTransactionCategoryByName = async (name) => {
   return category;
 };
 
-const getTransactions = async (page, limit, filter) => {
-  // 1) Get total count for pagination
-  const totalItems = await Transaction.countDocuments(filter);
+const getTransactions = async (page, limit, filter, userId) => {
+  // Add userId to the filter
+  const userFilter = { ...filter, userId }; // or { ...filter, user: userId } depending on your schema field name
+  
+  // 1) Get total count for pagination (using the filter with userId)
+  const totalItems = await Transaction.countDocuments(userFilter);
 
   // 2) Calculate total pages
   const totalPages = Math.ceil(totalItems / limit);
 
-  // 3) Fetch transactions with pagination
-  const transactions = await Transaction.find(filter)
+  // 3) Fetch transactions with pagination (using the filter with userId)
+  const transactions = await Transaction.find(userFilter)
     .populate({ path: 'categoryId', select: 'name', options: { lean: true } })
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
