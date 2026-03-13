@@ -291,7 +291,7 @@ const getTransactionsController = async (req, res) => {
     delete filters.page;
     delete filters.perPage;
 
-    const transactions = await getTransactions(page, limit, filters);
+    const transactions = await getTransactions(page, limit, filters, req.user._id);
     return apiResponse(
       res,
       'Transactions fetched successfully',
