@@ -9,6 +9,7 @@ const {
   setTransactionPinController,
   changeTransactionPinController,
   getUserBeneficiariesController,
+  changePasswordController,
 } = require('../controllers/userController');
 const { authenticate } = require('../middlewares/authHandler');
 
@@ -20,4 +21,5 @@ router.get('/my-wallet-details', authenticate, getMyWalletDetailsController);
 router.patch('/set-transaction-pin', authenticate, setTransactionPinController);
 router.patch('/change-transaction-pin', authenticate, changeTransactionPinController);
 router.get('/beneficiaries', authenticate, getUserBeneficiariesController);
+router.patch('/settings', authenticate, changePasswordController);
 module.exports = router;
