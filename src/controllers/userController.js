@@ -9,7 +9,7 @@ const {
   getUserBeneficiaries,
 } = require('../dbCruds/userCrud');
 const Logger = require('../utils/logger');
-const { comparePassword } = require('../utils/appUtil');
+const { comparePassword, hashPassword } = require('../utils/appUtil');
 const { connection } = require('../config/redis.js');
 
 const logger = new Logger();
@@ -263,6 +263,70 @@ const getUserBeneficiariesController = async (req, res) => {
   }
 };
 
+// user settings to change the user's password
+const changePasswordController = async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return apiResponse(
+        res,
+        'All password fields are required',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+    if (newPassword !== confirmPassword) {
+      return apiResponse(
+        res,
+        'New password and confirm password do not match',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+    const user = req.user;
+    const isOldPasswordValid = await comparePassword(oldPassword, user.password);
+    if (!isOldPasswordValid) {
+      return apiResponse(
+        res,
+        'Old password is incorrect',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    if (newPassword.length < 8) {
+      return apiResponse(
+        res,
+        'New password must be at least 8 characters long',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    if (oldPassword === newPassword) {
+      return apiResponse(
+        res,
+        'New password cannot be the same as the old password',
+        HttpStatusCodes.BAD_REQUEST,
+        StatusResponse.FAILED
+      );
+    }
+
+    user.password = await hashPassword(newPassword);
+    await user.save();
+
+    return apiResponse(
+      res,
+      'Password changed successfully',
+      HttpStatusCodes.OK,
+      StatusResponse.SUCCESS
+    );
+  } catch (error) {
+    logger.error(`Error in changePasswordController: ${error}`);
+    return apiResponse(res, 'Network Error', HttpStatusCodes.BAD_REQUEST, StatusResponse.FAILED);
+  }
+};
+
 module.exports = {
   getUserDetails,
   getBanksController,
@@ -272,4 +336,5 @@ module.exports = {
   setTransactionPinController,
   changeTransactionPinController,
   getUserBeneficiariesController,
+  changePasswordController,
 };
