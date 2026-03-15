@@ -36,7 +36,7 @@ const getTransactionCategoryByName = async (name) => {
 const getTransactions = async (page, limit, filter, userId) => {
   // Add userId to the filter
   const userFilter = { ...filter, userId }; // or { ...filter, user: userId } depending on your schema field name
-  
+
   // 1) Get total count for pagination (using the filter with userId)
   const totalItems = await Transaction.countDocuments(userFilter);
 
