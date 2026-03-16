@@ -16,11 +16,26 @@ services:
     restart: always
     init: true
 
-  worker:
+  vtpass-worker:
     build:
       context: .
-      dockerfile: Dockerfile.worker
-    container_name: finwallet_worker
+      dockerfile: Dockerfile.vtpassWorker
+    container_name: finwallet_vtpass_worker
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      # - mongo
+      - redis
+    restart: always
+    init: true
+
+  email-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.emailWorker
+    container_name: finwallet_email_worker
     env_file:
       - .env
     volumes:
