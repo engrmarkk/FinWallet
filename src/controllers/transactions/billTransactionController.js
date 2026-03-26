@@ -3,7 +3,7 @@ const HttpStatusCodes = require('../../utils/statusCodes');
 const StatusResponse = require('../../utils/statusResponse');
 const Logger = require('../../utils/logger');
 const { VtpassService } = require('../../integrations/vtpass/services');
-const { determinePurchaseType, generateRequestId } = require('../../utils/appUtil');
+const { determinePurchaseType, generateRequestId, comparePassword } = require('../../utils/appUtil');
 const {
   createTransactionCategory,
   createBillTransaction,
