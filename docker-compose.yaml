@@ -59,7 +59,7 @@ services:
     image: redis:7
     container_name: finwallet_redis
     ports:
-      - '6382:6379'
+      - '6385:6379'
     restart: always
 
 # volumes:
