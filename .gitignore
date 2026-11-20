@@ -146,7 +146,3 @@ vite.config.ts.timestamp-*
 create.sh
 .DS_Store
 .DS_Store/%
-branch_structure.json
-temp_auto_push.bat
-temp_interactive_push.bat
-config.bat
