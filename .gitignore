@@ -146,4 +146,4 @@ vite.config.ts.timestamp-*
 create.sh
 .DS_Store
 .DS_Store/%
-.vscode
+config.bat
